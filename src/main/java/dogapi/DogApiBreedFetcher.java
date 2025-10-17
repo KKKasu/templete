@@ -34,14 +34,19 @@ public class DogApiBreedFetcher implements BreedFetcher {
                 throw new BreedNotFoundException(breed);
             }
 
-            JSONArray arr = json.getJSONArray("message");
+            JSONArray arr = json.optJSONArray("message");
+            if (arr == null) {
+                throw new BreedNotFoundException(breed);
+            }
+
             List<String> result = new ArrayList<>();
             for (int i = 0; i < arr.length(); i++) {
                 result.add(arr.getString(i));
             }
             return result;
+
         } catch (IOException e) {
-            throw new RuntimeException("Network error", e);
+            throw new BreedNotFoundException(breed);
         }
     }
 }
