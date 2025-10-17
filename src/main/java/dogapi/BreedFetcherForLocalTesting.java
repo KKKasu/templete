@@ -2,6 +2,9 @@ package dogapi;
 
 import java.util.List;
 
+/**
+ * Local implementation for testing without hitting the API.
+ */
 public class BreedFetcherForLocalTesting implements BreedFetcher {
     private int callCount = 0;
 
