@@ -5,12 +5,18 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A BreedFetcher that caches successful results from another BreedFetcher.
- * Exceptions are not cached.
+ * A BreedFetcher that caches results from another BreedFetcher to avoid redundant API calls.
+ * It does not cache failed requests (invalid breeds).
+ *
+ * @author YourName
+ * @version 1.0
  */
 public class CachingBreedFetcher implements BreedFetcher {
     private final BreedFetcher delegate;
     private final Map<String, List<String>> cache = new HashMap<>();
+
+    /** Number of actual delegate calls made (for testing verification). */
+    private int callsMade = 0;
 
     public CachingBreedFetcher(BreedFetcher delegate) {
         this.delegate = delegate;
@@ -24,8 +30,13 @@ public class CachingBreedFetcher implements BreedFetcher {
             return cache.get(key);
         }
 
+        callsMade++;
         List<String> result = delegate.getSubBreeds(breed);
         cache.put(key, result);
         return result;
+    }
+
+    public int getCallsMade() {
+        return callsMade;
     }
 }
