@@ -11,6 +11,7 @@ public class Main {
         String breed = "hound";
         int result = getNumberOfSubBreeds(breed, cachingFetcher);
         System.out.println(breed + " has " + result + " sub breeds");
+
         breed = "cat";
         result = getNumberOfSubBreeds(breed, cachingFetcher);
         System.out.println(breed + " has " + result + " sub breeds");
@@ -21,12 +22,6 @@ public class Main {
         }
     }
 
-    /**
-     * Return the number of sub breeds that the given dog breed has according to the provided fetcher.
-     * @param breed the name of the dog breed
-     * @param breedFetcher the breedFetcher to use
-     * @return the number of sub breeds; zero should be returned if the breed is not found
-     */
     public static int getNumberOfSubBreeds(String breed, BreedFetcher breedFetcher) {
         try {
             List<String> subBreeds = breedFetcher.getSubBreeds(breed);
