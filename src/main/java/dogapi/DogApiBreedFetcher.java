@@ -1,45 +1,49 @@
 package dogapi;
 
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DogApiBreedFetcher implements BreedFetcher {
-    private final OkHttpClient client = new OkHttpClient();
+    private static final String API_URL = "https://dog.ceo/api/breed/%s/list";
 
     @Override
     public List<String> getSubBreeds(String breed) throws BreedNotFoundException {
-        String url = "https://dog.ceo/api/breed/" + breed + "/list";
-        Request request = new Request.Builder().url(url).build();
+        try {
+            HttpClient client = HttpClient.newHttpClient();
+            String url = String.format(API_URL, breed.toLowerCase());
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .build();
 
-        try (Response response = client.newCall(request).execute()) {
-            if (response.body() == null) {
-                throw new BreedNotFoundException(breed);
-            }
-            String body = response.body().string();
-            JSONObject json = new JSONObject(body);
+            HttpResponse<String> response =
+                    client.send(request, HttpResponse.BodyHandlers.ofString());
+            String body = response.body();
 
-            if (!"success".equalsIgnoreCase(json.optString("status"))) {
-                throw new BreedNotFoundException(breed);
-            }
-
-            JSONArray message = json.optJSONArray("message");
-            if (message == null) {
+            if (!body.contains("\"status\":\"success\"")) {
                 throw new BreedNotFoundException(breed);
             }
 
-            List<String> subBreeds = new ArrayList<>();
-            for (int i = 0; i < message.length(); i++) {
-                subBreeds.add(message.getString(i));
+            int start = body.indexOf('[');
+            int end = body.indexOf(']');
+            if (start < 0 || end < 0) {
+                throw new BreedNotFoundException(breed);
             }
-            return subBreeds;
 
-        } catch (IOException e) {
+            String inside = body.substring(start + 1, end).trim();
+            List<String> result = new ArrayList<>();
+            if (!inside.isEmpty()) {
+                for (String s : inside.replace("\"", "").split(",")) {
+                    result.add(s.trim());
+                }
+            }
+            return result;
+
+        } catch (IOException | InterruptedException e) {
             throw new BreedNotFoundException(breed);
         }
     }
