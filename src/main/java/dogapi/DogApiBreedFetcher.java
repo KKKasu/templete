@@ -1,50 +1,47 @@
 package dogapi;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Implementation of BreedFetcher that retrieves sub-breeds from the Dog CEO API.
+ */
 public class DogApiBreedFetcher implements BreedFetcher {
     private static final String API_URL = "https://dog.ceo/api/breed/%s/list";
+    private final OkHttpClient client = new OkHttpClient();
 
     @Override
     public List<String> getSubBreeds(String breed) throws BreedNotFoundException {
-        try {
-            HttpClient client = HttpClient.newHttpClient();
-            String url = String.format(API_URL, breed.toLowerCase());
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .build();
+        String url = String.format(API_URL, breed.toLowerCase());
+        Request request = new Request.Builder().url(url).build();
 
-            HttpResponse<String> response =
-                    client.send(request, HttpResponse.BodyHandlers.ofString());
-            String body = response.body();
-
-            if (!body.contains("\"status\":\"success\"")) {
+        try (Response response = client.newCall(request).execute()) {
+            if (response.body() == null) {
                 throw new BreedNotFoundException(breed);
             }
 
-            int start = body.indexOf('[');
-            int end = body.indexOf(']');
-            if (start < 0 || end < 0) {
+            String body = response.body().string();
+            JSONObject json = new JSONObject(body);
+
+            if (!"success".equalsIgnoreCase(json.optString("status"))) {
                 throw new BreedNotFoundException(breed);
             }
 
-            String inside = body.substring(start + 1, end).trim();
+            JSONArray arr = json.getJSONArray("message");
             List<String> result = new ArrayList<>();
-            if (!inside.isEmpty()) {
-                for (String s : inside.replace("\"", "").split(",")) {
-                    result.add(s.trim());
-                }
+            for (int i = 0; i < arr.length(); i++) {
+                result.add(arr.getString(i));
             }
             return result;
-
-        } catch (IOException | InterruptedException e) {
-            throw new BreedNotFoundException(breed);
+        } catch (IOException e) {
+            throw new RuntimeException("Network error", e);
         }
     }
 }
