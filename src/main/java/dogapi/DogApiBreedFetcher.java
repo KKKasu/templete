@@ -51,7 +51,7 @@ public class DogApiBreedFetcher implements BreedFetcher {
             return result;
 
         } catch (IOException e) {
-            throw new RuntimeException("Network error while fetching sub-breeds for breed: " + breed, e);
+            throw new BreedNotFoundException(breed);
         } catch (Exception e) {
             throw new BreedNotFoundException(breed);
         }
