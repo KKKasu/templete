@@ -23,25 +23,18 @@ public class DogApiBreedFetcher implements BreedFetcher {
         Request request = new Request.Builder().url(url).build();
 
         try (Response response = client.newCall(request).execute()) {
-            // ① 无响应体 → 直接抛异常
             if (response.body() == null) {
-                throw new BreedNotFoundException(breed);
+                throw new RuntimeException("Network error: empty response");
             }
 
-            // ② 读取内容
-            String body = response.body().string().trim();
-            if (body.isEmpty() || !body.startsWith("{")) {
-                throw new BreedNotFoundException(breed);
-            }
-
-            // ③ 尝试解析 JSON
+            String body = response.body().string();
             JSONObject json = new JSONObject(body);
+
             String status = json.optString("status", "error");
             if (!"success".equalsIgnoreCase(status)) {
                 throw new BreedNotFoundException(breed);
             }
 
-            // ④ 提取 message 数组
             JSONArray arr = json.optJSONArray("message");
             if (arr == null) {
                 throw new BreedNotFoundException(breed);
@@ -49,15 +42,12 @@ public class DogApiBreedFetcher implements BreedFetcher {
 
             List<String> result = new ArrayList<>();
             for (int i = 0; i < arr.length(); i++) {
-                result.add(arr.optString(i));
+                result.add(arr.getString(i));
             }
-
             return result;
 
         } catch (IOException e) {
-            throw new BreedNotFoundException(breed);
-        } catch (Exception e) {
-            throw new BreedNotFoundException(breed);
+            throw new RuntimeException("Network error");
         }
     }
 }
