@@ -5,7 +5,6 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +14,15 @@ import java.util.List;
  */
 public class DogApiBreedFetcher implements BreedFetcher {
     private static final String API_URL = "https://dog.ceo/api/breed/%s/list";
-    private final OkHttpClient client = new OkHttpClient();
+    private final OkHttpClient client;
+
+    public DogApiBreedFetcher() {
+        this(new OkHttpClient());
+    }
+
+    public DogApiBreedFetcher(OkHttpClient client) {
+        this.client = client;
+    }
 
     @Override
     public List<String> getSubBreeds(String breed) throws BreedNotFoundException {
@@ -34,7 +41,6 @@ public class DogApiBreedFetcher implements BreedFetcher {
             if (!"success".equalsIgnoreCase(status)) {
                 throw new BreedNotFoundException(breed);
             }
-
             JSONArray arr = json.optJSONArray("message");
             if (arr == null) {
                 throw new BreedNotFoundException(breed);
@@ -47,7 +53,7 @@ public class DogApiBreedFetcher implements BreedFetcher {
             return result;
 
         } catch (IOException e) {
-            throw new RuntimeException("Network error");
+            throw new RuntimeException("Network error", e);
         }
     }
 }
