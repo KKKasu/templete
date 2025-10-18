@@ -28,7 +28,7 @@ public class DogApiBreedFetcher implements BreedFetcher {
 
         try (Response response = client.newCall(request).execute()) {
             if (response.body() == null) {
-                throw new RuntimeException("Network error: empty response for breed " + breed);
+                throw new BreedNotFoundException(breed);
             }
 
             String body = response.body().string();
@@ -52,6 +52,8 @@ public class DogApiBreedFetcher implements BreedFetcher {
 
         } catch (IOException e) {
             throw new RuntimeException("Network error while fetching sub-breeds for breed: " + breed, e);
+        } catch (Exception e) {
+            throw new BreedNotFoundException(breed);
         }
     }
 }
