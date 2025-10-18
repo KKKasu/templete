@@ -7,6 +7,7 @@ import java.util.List;
  * This mock avoids real API calls by returning fixed data for specific breeds.
  */
 public class BreedFetcherForLocalTesting implements BreedFetcher {
+
     private int callCount = 0;
 
     @Override
@@ -14,7 +15,7 @@ public class BreedFetcherForLocalTesting implements BreedFetcher {
         callCount++;
 
         if ("hound".equalsIgnoreCase(breed)) {
-            return List.of("afghan", "ibizan", "english", "basset", "walker", "blood", "plott");
+            return List.of("afghan", "basset");
         }
 
         throw new BreedNotFoundException(breed);
